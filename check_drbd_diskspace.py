@@ -8,7 +8,6 @@
 
 import sys
 import os
-import statvfs
 import argparse
 
 def main():
@@ -22,10 +21,8 @@ def main():
 
     if os.path.ismount(args.filesystem):
         stats = os.statvfs(args.filesystem)
-        blocks = stats.f_bfree * stats.f_frsize
-        total = stats.f_blocks * stats.f_frsize
-        assert total>0, "A file system with zero blocks? Surely you jest?"
-        percentage = (blocks * 100) / total
+        assert stats.f_blocks > 0, "A file system with zero blocks? Surely you jest?"
+        percentage = (stats.f_bfree * 100) / stats.f_blocks
 
         if percentage > args.critical:
             print "DISK CRITICAL - free space: %s %d%%" % (args.filesystem,
