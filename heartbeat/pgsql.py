@@ -54,7 +54,7 @@ handler = HALogHandler()
 handler.setLevel(logging.INFO)
 logger.addHandler(handler)
 # This line here for debugging only
-logger.addHandler(logging.FileHandler('/tmp/halog'))
+#logger.addHandler(logging.FileHandler('/tmp/halog'))
 logger.setLevel(logging.INFO)
 
 # Decorators for dropping privileges and forking
