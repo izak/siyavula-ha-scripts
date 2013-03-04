@@ -53,8 +53,12 @@ logger.propagate = False
 handler = HALogHandler()
 handler.setLevel(logging.INFO)
 logger.addHandler(handler)
-# This line here for debugging only
-#logger.addHandler(logging.FileHandler('/tmp/halog'))
+
+# This here for debugging only
+#fh = logging.FileHandler('/tmp/halog')
+#fh.setFormatter(logging.Formatter(fmt='%(asctime)s %(message)s'))
+#logger.addHandler(fh)
+
 logger.setLevel(logging.INFO)
 
 # Decorators for dropping privileges and forking
@@ -182,14 +186,21 @@ class ResourceAgent(object):
             self.settings.resourcename, score)
         self.crm_master(score)
 
-    def _ctlcluster(self, action):
+    def _ctlcluster(self, action, options=None):
+        cmd = "%s '%s' '%s' %s" % (
+            self.settings.pgctlcluster,
+            self.settings.version,
+            self.settings.clustername, action)
+        if options is not None:
+            # pg_ctl options
+            cmd += ' -- ' + options
+        logger.info("calling %s", cmd)
         try:
-            sh("%s '%s' '%s' %s" % (
-                self.settings.pgctlcluster,
-                self.settings.version,
-                self.settings.clustername, action))
+            sh(cmd)
         except CommandFailed:
+            logger.info("error")
             return 1
+        logger.info("returning")
         return 0
 
     def start(self):
@@ -318,22 +329,53 @@ class ResourceAgent(object):
         return 7
 
     def demote(self):
-        logger.info("Stopping the server")
-        self._ctlcluster('stop')
-
-        if self._status() > 0:
-            # Server still alive
-            logger.info("Server still alive, bailing")
-            return 1
-
         logger.info("Making recovery.conf file")
         self.make_recovery()
-        logger.info("Starting server")
-        self._ctlcluster('start')
-        logger.info("Demotion complete")
-        return 0
+
+        if self._status() > 0:
+            logger.info("Restarting server")
+            self._ctlcluster('restart')
+        else:
+            logger.info("Starting server")
+            self._ctlcluster('start')
+
+        while True:
+            logger.info("Waiting for slave to start up")
+            sleep(1) # Give postgresql a change to start
+            status = self._status()
+            if status > 0:
+                # master
+                logger.info("Server is up, demotion complete")
+                return 0
+            else:
+                # Postgresql is dead
+                break
+        logger.info("Server died, bailing")
+        return 7
 
     def notify(self):
+        t = os.environ['OCF_RESKEY_CRM_meta_notify_type']
+        o = os.environ['OCF_RESKEY_CRM_meta_notify_operation']
+        logger.info("%s-%s event", t, o)
+
+        if o == "demote":
+            # For some reason, this has a space appended. strip() it.
+            node = os.environ['OCF_RESKEY_CRM_meta_notify_demote_uname'].strip()
+            logger.info("%s is being demoted, my name is %s",
+                node, self.settings.hostname)
+            if node != self.settings.hostname:
+                if t == "pre":
+                    # The master is going down. Stop in order that we might
+                    # reconnect to the new master, and release connections on
+                    # the current master so it shuts down faster.
+                    logger.info("Stopping slave on %s", self.settings.hostname)
+                    self._ctlcluster('stop', options="-m fast")
+                else:
+                    # post-demotion, restart to connect to new master, or
+                    # become one later.
+                    logger.info("Starting slave on %s", self.settings.hostname)
+                    self._ctlcluster('start')
+
         return 0
 
     def _status(self):
