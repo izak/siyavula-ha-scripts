@@ -126,6 +126,13 @@ the shell:
 
   location psql-master-node mspsql rule role=master 50: \#uname eq node1
 
+Also increase the default timeout for operations. The default of 20 seconds
+doesn't work well, and it appears that pacemaker ignores per-service options.
+
+  op_defaults timeout=60s
+
+Finally, commit the configuration.
+
   commit
 
 After a while, heartbeat should start up both postgresql instances, and promote
