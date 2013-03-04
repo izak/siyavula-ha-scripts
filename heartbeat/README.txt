@@ -80,10 +80,16 @@ Step 5: Configure Heartbeat
 ----------------------------
 
 Once again, this is not a full discussion on how to set up heartbeat. I assume
-you have heartbeat 3.0.x or later running, with pacemaker 1.1.x or later.
+you have heartbeat 3.0.x or later running, with pacemaker 1.1.x or later. I
+also assume that 10.0.0.1 can be used as a floating ip address.
 
-I also assume that 10.0.0.1 can be used as a floating ip address. On either
-node, run the command:
+Because we don't want postgresql to fail-back (flop arround unnecessarily)
+if the former master server comes back online, set default stickiness to
+100:
+
+  crm configure property default-resource-stickiness=”100”
+
+On either node, run the command:
 
   crm configure
 
@@ -118,8 +124,7 @@ the shell:
 
   colocation psql-on-psqlip inf: psqlip mspsql:Master
 
-  location psql-master-node mspsql rule \
-    role=master 100: \#uname eq node1
+  location psql-master-node mspsql rule role=master 50: \#uname eq node1
 
   commit
 
