@@ -31,8 +31,6 @@
 
 import sys
 import os
-import subprocess
-import shlex
 import syslog
 from ctypes import cdll
 import logging
@@ -77,31 +75,6 @@ logger.addHandler(handler)
 # This line here for debugging only
 logger.addHandler(logging.FileHandler('/tmp/halog'))
 logger.setLevel(logging.INFO)
-
-class CommandFailed(Exception):
-    def __init__(self, code, msg):
-        super(CommandFailed, self).__init__(self, code, msg)
-        self.code = code
-        self.msg = msg
-
-def sh(command):
-    p = subprocess.Popen(shlex.split(command),
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    p.wait()
-    response = p.stdout.read()
-    if p.returncode != 0:
-        raise CommandFailed(p.returncode, response)
-    return response
-
-def crm_master(weight):
-    if weight < 0:
-        promote = "-INFINITY"
-    else:
-        promote = str(weight)
-    try:
-        sh("/usr/sbin/crm_master -l reboot -v %s" % promote)
-    except CommandFailed, e:
-        logger.info("crm_master command failed: %s", e.msg)
 
 class ResourceAgent(object):
     def __init__(self):
