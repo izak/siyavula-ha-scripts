@@ -4,10 +4,8 @@
 #
 #  primitive zeo ocf:upfront:zeo \
 #    op start   timeout="3600s" on-fail="stop" \
-#    op demote  timeout="60s" interval="30s" on-fail="stop" \
 #    op stop    timeout="60s" on-fail="block" \
 #    op monitor timeout="29s" interval="30s" on-fail="restart" \
-#    op monitor timeout="28s" interval="29s" on-fail="restart" role="Master"
 
 
 import sys
