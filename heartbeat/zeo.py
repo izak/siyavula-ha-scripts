@@ -11,6 +11,8 @@
 import sys
 import socket
 import os
+import pickle
+import pwd
 import subprocess
 import shlex
 import syslog
@@ -62,6 +64,37 @@ logger.addHandler(handler)
 
 logger.setLevel(logging.INFO)
 
+# Decorators for dropping privileges and forking
+def fork_and_exec(fn):
+    def _fork_and_run(*args, **kwargs):
+        readend, writeend = os.pipe()
+        readend = os.fdopen(readend, "r")
+        writeend = os.fdopen(writeend, "w")
+        pid = os.fork()
+        if pid==0:
+            # =-=-=-= Child process starts =-=-=-=
+            readend.close()
+            result = fn(*args, **kwargs)
+            pickle.dump(result, writeend)
+            writeend.flush()
+            os._exit(0)
+            # =-=-=-= Child process ends =-=-=-=
+        writeend.close()
+        result = pickle.load(readend)
+        pid, status = os.waitpid(pid, 0)
+        return result
+    return _fork_and_run
+
+def drop_privileges(user):
+    def _wrap(fn):
+        def _new(*args, **kwargs):
+            pw = pwd.getpwnam(user)
+            os.setregid(pw[3], pw[3])
+            os.setreuid(pw[2], pw[2])
+            return fn(*args, **kwargs)
+        return _new
+    return _wrap
+
 class CommandFailed(Exception):
     def __init__(self, code, msg):
         super(CommandFailed, self).__init__(self, code, msg)
@@ -101,6 +134,7 @@ class ResourceAgent(object):
         self.zeoctl = os.environ.get('OCF_RESKEY_zeoctl', '/home/zope/bin/zeoserver')
         self.zeohost = os.environ.get('OCF_RESKEY_zeohost', '127.0.0.1')
         self.zeoport = int(os.environ.get('OCF_RESKEY_zeoport', '8100'))
+        self.zeouser = os.environ.get('OCF_RESKEY_zeouser', 'zope')
 
     def _zeoctl(self, action):
         cmd = "%s %s" % (self.zeoctl, action)
@@ -117,12 +151,15 @@ class ResourceAgent(object):
 
     def start(self):
         if not self._status():
-            return self._zeoctl('start')
+            _c = drop_privileges(self.zeouser)(self._zeoctl)
+            _c = fork_and_exec(_c)
+            return _c('start')
         return 0
 
     def stop(self):
         if self._status():
-            self._zeoctl('stop')
+            _c = drop_privileges(self.zeouser)(self._zeoctl)
+            fork_and_exec(_c)('stop')
         if self._status():
             return 7
         return 0
@@ -159,6 +196,11 @@ class ResourceAgent(object):
             <longdesc lang="en">TCP port for ZEO server.</longdesc>
             <shortdesc lang="en">zeoport</shortdesc>
             <content type="string" default="{zeoport}" />
+        </parameter>
+        <parameter name="zeouser" unique="0" required="0">
+            <longdesc lang="en">User that runs the ZEO server.</longdesc>
+            <shortdesc lang="en">zeouser</shortdesc>
+            <content type="string" default="{zeouser}" />
         </parameter>
     </parameters>
 
