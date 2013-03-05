@@ -1,0 +1,12 @@
+Source: siyavula-ha-scripts
+Maintainer: Izak Burger <izak@upfrontsystems.co.za>
+Section: admin
+Priority: optional
+Standards-Version: 3.9.2
+Build-Depends: debhelper (>= 8)
+
+Package: siyavula-ha-scripts
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: A collection of high availability scripts
+ Contains a collection of high availability scripts and resource agents.
