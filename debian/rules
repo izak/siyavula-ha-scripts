@@ -8,3 +8,4 @@ override_dh_auto_install:
 	cp heartbeat/dummy.py debian/tmp/usr/lib/ocf/resource.d/upfront/dummy
 	cp heartbeat/pgsql.py debian/tmp/usr/lib/ocf/resource.d/upfront/pgsql
 	cp heartbeat/zeo.py debian/tmp/usr/lib/ocf/resource.d/upfront/zeo
+	chmod +x debian/tmp/usr/lib/ocf/resource.d/upfront/*
