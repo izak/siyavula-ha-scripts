@@ -2,7 +2,10 @@
 #
 # Resource agent for a zope zeo server.
 #
-#  primitive zeo ocf:upfront:zeo \
+#  primitive zeo ocf:upfront:zeo  params \
+#    zeoctl="/home/zope/bin/zeoserver" \
+#    zeosock="/home/zope/var/zeo.sock" \
+#    zeouser="zope" \
 #    op start   timeout="3600s" on-fail="stop" \
 #    op stop    timeout="60s" on-fail="block" \
 #    op monitor timeout="29s" interval="30s" on-fail="restart" \
@@ -150,7 +153,6 @@ class ResourceAgent(object):
         }
         self.resourcename = os.environ.get('OCF_RESOURCE_INSTANCE', 'zeo'),
         self.zeoctl = os.environ.get('OCF_RESKEY_zeoctl', '/home/zope/bin/zeoserver')
-        self.zeohost = os.environ.get('OCF_RESKEY_zeohost', '127.0.0.1')
         self.zeosock = os.environ.get('OCF_RESKEY_zeosock', '/home/zope/var/zeo.sock')
         self.zeouser = os.environ.get('OCF_RESKEY_zeouser', 'zope')
 
@@ -204,11 +206,6 @@ class ResourceAgent(object):
             <longdesc lang="en">Path to zeoctl script.</longdesc>
             <shortdesc lang="en">zeoctl</shortdesc>
             <content type="string" default="{zeoctl}" />
-        </parameter>
-        <parameter name="zeohost" unique="0" required="0">
-            <longdesc lang="en">Hostname of ZEO server.</longdesc>
-            <shortdesc lang="en">zeohost</shortdesc>
-            <content type="string" default="{zeohost}" />
         </parameter>
         <parameter name="zeosock" unique="0" required="0">
             <longdesc lang="en">Path to unix socket for ZEO server.</longdesc>
