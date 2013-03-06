@@ -8,5 +8,6 @@ Build-Depends: debhelper (>= 8)
 Package: siyavula-ha-scripts
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}, python-psycopg2
+Suggests: libplumb2
 Description: A collection of high availability scripts
  Contains a collection of high availability scripts and resource agents.
