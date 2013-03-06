@@ -6,7 +6,7 @@ I had some trouble getting it going, and in an effort to simplify things and
 perhaps understand them, I ended up writing my own.
 
 This RA assumes you have only two nodes, the way many people will be running
-it. It makes live somewhat easier. It also does not monitor the exact state
+it. It makes life somewhat easier. It also does not monitor the exact state
 of each instance. For this you really should use another monitoring system,
 such as nagios and/or munin.
 
@@ -21,13 +21,12 @@ On both nodes, create an ha cluster:
 
   pg_createcluster 9.1 ha
 
-Change these settings in postgresql.confS on both nodes:
+Change these settings in postgresql.conf on both nodes:
 
   wal_level = hot_standby
   max_wal_senders = 5
   hot_standby = on
   archive_mode = on
-  archive_command = 'cp %p /var/lib/postgresql/9.1/replica2/_archive/%f'
   archive_command = 'scp -P 222 %p node2:/var/lib/postgresql/archive/9.1/ha/%f'
 
 Replace node2 with the name of the _other_ node, so that each instance will
