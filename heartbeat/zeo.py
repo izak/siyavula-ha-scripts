@@ -7,8 +7,8 @@
 #    op stop    timeout="60s" on-fail="block" \
 #    op monitor timeout="29s" interval="30s" on-fail="restart" \
 
-
 import sys
+import re
 import socket
 import os
 import pickle
@@ -110,15 +110,33 @@ def sh(command):
         raise CommandFailed(p.returncode, response)
     return response
 
-def check_tcp(address, port):
-    s = socket.socket()
+def send_zeo_action(sockname, action):
+    """Send an action to the zdrun server and return the response.
+       Return None if the server is not up or any other error happened. """
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     try:
-        s.connect((address, port))
-        s.close()
-        return True
-    except socket.error, e:
-        pass
-    return False
+        sock.connect(sockname)
+        sock.send(action + "\n")
+        sock.shutdown(1) # We're not writing any more
+        response = ""
+        while 1:
+            data = sock.recv(1000)
+            if not data:
+                break
+            response += data
+        sock.close()
+        return response
+    except socket.error, msg:
+        return None
+
+def get_zeo_status(sockname):
+    resp = send_zeo_action(sockname, "status")
+    if not resp:
+        return 0
+    m = re.search("(?m)^application=(\d+)$", resp)
+    if not m:
+        return 0
+    return int(m.group(1))
 
 class ResourceAgent(object):
     def __init__(self):
@@ -133,7 +151,7 @@ class ResourceAgent(object):
         self.resourcename = os.environ.get('OCF_RESOURCE_INSTANCE', 'zeo'),
         self.zeoctl = os.environ.get('OCF_RESKEY_zeoctl', '/home/zope/bin/zeoserver')
         self.zeohost = os.environ.get('OCF_RESKEY_zeohost', '127.0.0.1')
-        self.zeoport = int(os.environ.get('OCF_RESKEY_zeoport', '8100'))
+        self.zeosock = os.environ.get('OCF_RESKEY_zeosock', '/home/zope/var/zeo.sock')
         self.zeouser = os.environ.get('OCF_RESKEY_zeouser', 'zope')
 
     def _zeoctl(self, action):
@@ -147,7 +165,7 @@ class ResourceAgent(object):
         return 0
 
     def _status(self):
-        return check_tcp(self.zeohost, self.zeoport)
+        return get_zeo_status(self.zeosock) > 0
 
     def start(self):
         if not self._status():
@@ -192,10 +210,10 @@ class ResourceAgent(object):
             <shortdesc lang="en">zeohost</shortdesc>
             <content type="string" default="{zeohost}" />
         </parameter>
-        <parameter name="zeoport" unique="0" required="0">
-            <longdesc lang="en">TCP port for ZEO server.</longdesc>
-            <shortdesc lang="en">zeoport</shortdesc>
-            <content type="string" default="{zeoport}" />
+        <parameter name="zeosock" unique="0" required="0">
+            <longdesc lang="en">Path to unix socket for ZEO server.</longdesc>
+            <shortdesc lang="en">zeosock</shortdesc>
+            <content type="string" default="{zeosock}" />
         </parameter>
         <parameter name="zeouser" unique="0" required="0">
             <longdesc lang="en">User that runs the ZEO server.</longdesc>
