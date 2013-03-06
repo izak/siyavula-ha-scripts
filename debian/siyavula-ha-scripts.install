@@ -1,2 +1,3 @@
-heartbeat/pgsql.py usr/lib/ocf/resource.d/upfront
-heartbeat/zeo.py usr/lib/ocf/resource.d/upfront
+usr/lib/ocf/resource.d/upfront/dummy
+usr/lib/ocf/resource.d/upfront/pgsql
+usr/lib/ocf/resource.d/upfront/zeo
