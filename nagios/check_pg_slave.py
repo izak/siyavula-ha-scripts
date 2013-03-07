@@ -49,6 +49,9 @@ def main():
     for slave in slavedata:
         receive_delay = master_num - CalculateNumericalOffset(slave[0])
         replay_delay = master_num = CalculateNumericalOffset(slave[1])
+        if receive_delay < 0:
+            print "Slave %s is in front of master" % (slave[2] or "localhost")
+            sys.exit(2)
         if receive_delay > 0:
             print "%s is behind by %d" % (slave[2] or "localhost",
                 receive_delay)
