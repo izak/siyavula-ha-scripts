@@ -11,3 +11,11 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, python-psycopg2
 Suggests: libplumb2
 Description: A collection of high availability scripts
  Contains a collection of high availability scripts and resource agents.
+
+Package: siyavula-nagios-scripts
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, python-psycopg2,
+ python-argparse | python2.7 (>= 2.7.3)
+Description: A collection of nagios scripts for HA monitoring.
+ This package contains nagios support scripts for ensuring the cluster
+ is healthy.
