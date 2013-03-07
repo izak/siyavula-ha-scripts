@@ -33,6 +33,11 @@ def main():
 
         devices.append(device)
     fp.close()
+
+    if len(devices) == 0:
+        print "No DRBD devices detected"
+        sys.exit(2)
+
     print "DRBD devices [%s] OK" % ", ".join(devices)
     sys.exit(0)
 
