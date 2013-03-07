@@ -36,7 +36,7 @@ def main():
     parser.add_argument("-u", "--user",
         help="Username for connection")
     parser.add_argument("-P", "--password",
-        help="Password for connection", default='localhost')
+        help="Password for connection")
 
     args = parser.parse_args()
 
