@@ -2,3 +2,4 @@ usr/lib/siyavula-ha-scripts/nagios/check_drbd_diskspace
 usr/lib/siyavula-ha-scripts/nagios/check_drbd_status
 usr/lib/siyavula-ha-scripts/nagios/check_pg_master
 usr/lib/siyavula-ha-scripts/nagios/check_pg_slave
+usr/lib/siyavula-ha-scripts/nagios/check_cache
