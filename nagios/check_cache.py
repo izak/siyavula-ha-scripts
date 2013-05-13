@@ -21,33 +21,41 @@ def main():
 
     total = None
     cache = None
+    free = None
     fp = open('/proc/meminfo', 'r')
     for l in fp.readlines():
         if l.startswith('Cached:'):
             cache = [x.strip() for x in l.strip().split(':')][1]
-        elif l.startswith('MemTotal'):
+        elif l.startswith('MemFree:'):
+            free = [x.strip() for x in l.strip().split(':')][1]
+        elif l.startswith('MemTotal:'):
             total = [x.strip() for x in l.strip().split(':')][1]
 
     if cache is None:
         print "Could not parse Cached from /proc/meminfo"
+        sys.exit(3)
+    if free is None:
+        print "Could not parse MemFree from /proc/meminfo"
         sys.exit(3)
     if total is None:
         print "Could not parse MemTotal from /proc/meminfo"
         sys.exit(3)
 
     cache = int(cache.split()[0])
+    free = int(free.split()[0])
     total = int(total.split()[0])
 
-    percentage = (cache * 100) / total
+    pfree = (free * 100) / total
+    pcache = (cache * 100) / total
 
-    if percentage < args.critical:
-        print "CACHE CRITICAL - cached: %d%%" % percentage
+    if max(pfree, pcache) < args.critical:
+        print "CACHE CRITICAL - cached: %d%%, free: %d%%" % (pcache, pfree)
         sys.exit(2)
-    elif percentage < args.warning:
-        print "CACHE WARNING - cached: %d%%" % percentage
+    elif max(pfree, pcache) < args.warning:
+        print "CACHE WARNING - cached: %d%%, free: %d%%" % (pcache, pfree)
         sys.exit(1)
     else:
-        print "CACHE OK - cached: %d%%" % percentage
+        print "CACHE OK - cached: %d%%, free: %d%%" % (pcache, pfree)
         sys.exit(0)
 
 if __name__ == "__main__":
