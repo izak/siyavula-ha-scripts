@@ -1,3 +1,9 @@
+siyavula-ha-scripts (0.4) unstable; urgency=low
+
+  * Performance enhancements.
+
+ -- Izak Burger <izak@upfrontsystems.co.za>  Mon, 08 Jul 2013 12:34:00 +0200
+
 siyavula-ha-scripts (0.3) unstable; urgency=low
 
   * check_cache plugin respects free memory as well.

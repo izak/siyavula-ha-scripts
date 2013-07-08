@@ -219,6 +219,21 @@ class ResourceAgent(object):
         return self._ctlcluster('stop')
 
     def monitor(self):
+        # Before we do anything else, check if postgres is even running
+        # using a cheap check. On most setups the PID file is in /var/run,
+        # and in most modern setups that would be on an in-memory tmpfs,
+        # so doing a check on that should be cheap.
+        if not os.path.exists(os.path.join('/var/run/postgresql', '%s-%s.pid' % (
+                self.settings.version, self.settings.clustername))):
+
+            # It's either not installed, or not running. If the data dir
+            # is not on this machine, assume it is not installed
+            if os.path.exists(self.settings.datadir):
+                # Not running
+                return 7
+            else:
+                return 5
+
         status = self._status()
         if status == 2:
             #self.adjust_score()
