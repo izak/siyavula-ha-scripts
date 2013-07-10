@@ -163,28 +163,6 @@ class ResourceAgent(object):
             fp.close()
         return _make_recovery()
 
-    def crm_master(self, weight):
-        if weight < 0:
-            promote = "-INFINITY"
-        else:
-            promote = str(weight)
-        try:
-            sh("%s/crm_master -l reboot -v %s" % (
-                self.settings.sbindir, promote))
-        except CommandFailed, e:
-            logger.info("crm_master command failed: %s", e.msg)
-
-    def adjust_score(self):
-        # Check if we are due for promotion, and signal it
-        signalfile = os.path.join(self.settings.datadir, '_fresh')
-        score = 100
-        if os.path.exists(signalfile):
-            score = 1000
-            os.unlink(signalfile)
-        logger.info("Set score for %s to %d",
-            self.settings.resourcename, score)
-        self.crm_master(score)
-
     def _ctlcluster(self, action, options=None):
         cmd = "%s '%s' '%s' %s" % (
             self.settings.pgctlcluster,
@@ -235,7 +213,6 @@ class ResourceAgent(object):
 
         status = self._status()
         if status == 2:
-            #self.adjust_score()
             return 8
         elif status > 0:
             return 0
