@@ -123,7 +123,6 @@ class ResourceAgent(object):
             'meta-data': self.metadata,
             'promote': self.promote,
             'demote': self.demote,
-            'notify': self.notify,
             'methods': self.methods
         }
         self.settings = self._settings()
@@ -211,12 +210,12 @@ class ResourceAgent(object):
         # postgresql must be started in slave mode, that is, it needs to drop
         # a recovery.conf file first
         self.make_recovery()
-        return self._ctlcluster('start')
+        return self._ctlcluster('start', options='-w')
 
     def stop(self):
         if self._status()==0:
             return 0
-        return self._ctlcluster('stop')
+        return self._ctlcluster('stop', options='-m fast')
 
     def monitor(self):
         # Before we do anything else, check if postgres is even running
@@ -314,8 +313,7 @@ class ResourceAgent(object):
         <action name="monitor" depth="0" timeout="10" interval="30"/>
         <action name="monitor" depth="0" timeout="10" interval="29" role="Master" />
         <action name="promote" timeout="60" />
-        <action name="demote" timeout="60" />
-        <action name="notify" timeout="45" />
+        <action name="demote" timeout="90" />
         <action name="meta-data" timeout="5" />
         <action name="methods" timeout="5" />
     </actions>
@@ -347,51 +345,16 @@ class ResourceAgent(object):
         logger.info("Making recovery.conf file")
         self.make_recovery()
 
-        if self._status() > 0:
-            logger.info("Restarting server")
-            self._ctlcluster('restart')
-        else:
-            logger.info("Starting server")
-            self._ctlcluster('start')
+        self._ctlcluster('stop', options='-m fast')
+        self._ctlcluster('start', options='-w')
 
-        while True:
-            logger.info("Waiting for slave to start up")
-            sleep(1) # Give postgresql a change to start
-            status = self._status()
-            if status > 0:
-                # master
-                logger.info("Server is up, demotion complete")
-                return 0
-            else:
-                # Postgresql is dead
-                break
+        if self._status() > 0:
+            # master
+            logger.info("Server is up, demotion complete")
+            return 0
+
         logger.info("Server died, bailing")
         return 7
-
-    def notify(self):
-        t = os.environ['OCF_RESKEY_CRM_meta_notify_type']
-        o = os.environ['OCF_RESKEY_CRM_meta_notify_operation']
-        logger.info("%s-%s event", t, o)
-
-        if o == "demote":
-            # For some reason, this has a space appended. strip() it.
-            node = os.environ['OCF_RESKEY_CRM_meta_notify_demote_uname'].strip()
-            logger.info("%s is being demoted, my name is %s",
-                node, self.settings.hostname)
-            if node != self.settings.hostname:
-                if t == "pre":
-                    # The master is going down. Stop in order that we might
-                    # reconnect to the new master, and release connections on
-                    # the current master so it shuts down faster.
-                    logger.info("Stopping slave on %s", self.settings.hostname)
-                    self._ctlcluster('stop', options="-m fast")
-                else:
-                    # post-demotion, restart to connect to new master, or
-                    # become one later.
-                    logger.info("Starting slave on %s", self.settings.hostname)
-                    self._ctlcluster('start')
-
-        return 0
 
     def _status(self):
         @fork_and_exec
