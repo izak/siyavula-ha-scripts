@@ -1,3 +1,4 @@
 usr/lib/ocf/resource.d/upfront/dummy
 usr/lib/ocf/resource.d/upfront/pgsql
+usr/lib/ocf/resource.d/upfront/portmon
 usr/lib/ocf/resource.d/upfront/zeo

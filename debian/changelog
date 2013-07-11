@@ -1,3 +1,9 @@
+siyavula-ha-scripts (0.5) unstable; urgency=low
+
+  * Added portmon RA.
+
+ -- Izak Burger <izak@upfrontsystems.co.za>  Mon, 11 Jul 2013 12:11:00 +0200
+
 siyavula-ha-scripts (0.4) unstable; urgency=low
 
   * Performance enhancements.
