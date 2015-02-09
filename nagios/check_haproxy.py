@@ -54,9 +54,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-u", "--url", help="Haproxy status url")
     parser.add_argument("-w", "--warning", type=int,
-        help="Warning level as percentage of dead backends", default=25)
+        help="Warning level as percentage of live backends", default=75)
     parser.add_argument("-c", "--critical", type=int,
-        help="Critical level as percentage of dead backends", default=50)
+        help="Critical level as percentage of live backends", default=50)
     args = parser.parse_args()
     if not args.url:
         parser.error('You must provide a haproxy status url')
