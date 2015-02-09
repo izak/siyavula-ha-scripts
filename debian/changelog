@@ -1,3 +1,9 @@
+siyavula-ha-scripts (0.6) unstable; urgency=low
+
+  * Added haproxy nagios script.
+
+ -- Izak Burger <izak@upfrontsystems.co.za>  Mon, 09 Feb 2015 14:22:00 +0200
+
 siyavula-ha-scripts (0.5) unstable; urgency=low
 
   * Added portmon RA.
