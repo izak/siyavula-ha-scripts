@@ -19,4 +19,5 @@ override_dh_auto_install:
 	cp nagios/check_pg_master.py debian/tmp/usr/lib/siyavula-ha-scripts/nagios/check_pg_master
 	cp nagios/check_pg_slave.py debian/tmp/usr/lib/siyavula-ha-scripts/nagios/check_pg_slave
 	cp nagios/check_cache.py debian/tmp/usr/lib/siyavula-ha-scripts/nagios/check_cache
+	cp nagios/check_haproxy.py debian/tmp/usr/lib/siyavula-ha-scripts/nagios/check_haproxy
 	chmod +x debian/tmp/usr/lib/siyavula-ha-scripts/nagios/*
